@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
-import { Moon, Sun, Download, Upload, RotateCcw, X } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { Moon, Sun, Download, Upload, RotateCcw, X, LogOut, User } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -26,8 +27,10 @@ interface SettingsPanelProps {
 }
 
 export const SettingsPanel = ({ open, onOpenChange }: SettingsPanelProps) => {
-  const { theme, setTheme, exportData, importData, resetWorkspace } = useApp();
+  const { theme, setTheme, exportData, importData, resetWorkspace, profile } = useApp();
+  const { user, signOut } = useAuth();
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,6 +48,11 @@ export const SettingsPanel = ({ open, onOpenChange }: SettingsPanelProps) => {
     }
   };
 
+  const handleLogout = async () => {
+    await signOut();
+    onOpenChange(false);
+  };
+
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
@@ -59,6 +67,38 @@ export const SettingsPanel = ({ open, onOpenChange }: SettingsPanelProps) => {
           </SheetHeader>
 
           <div className="space-y-6">
+            {/* User Profile */}
+            {user && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                  Account
+                </h3>
+                <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/30">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                    {profile?.avatar_url ? (
+                      <img 
+                        src={profile.avatar_url} 
+                        alt="Avatar" 
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-primary" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">
+                      {profile?.username || user.email?.split('@')[0]}
+                    </p>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <Separator />
+
             {/* Theme Toggle */}
             <div className="space-y-3">
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
@@ -135,6 +175,20 @@ export const SettingsPanel = ({ open, onOpenChange }: SettingsPanelProps) => {
 
             <Separator />
 
+            {/* Sign Out */}
+            <div className="space-y-3">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => setLogoutDialogOpen(true)}
+              >
+                <LogOut className="w-4 h-4 mr-3" />
+                Sign Out
+              </Button>
+            </div>
+
+            <Separator />
+
             {/* About */}
             <div className="space-y-3">
               <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
@@ -146,7 +200,7 @@ export const SettingsPanel = ({ open, onOpenChange }: SettingsPanelProps) => {
                   Your personal AI command center. Organize, save, and instantly access all your AI tools and productivity platforms.
                 </p>
                 <p className="text-xs text-muted-foreground/70 mt-4">
-                  Version 1.0.0
+                  Version 1.0.0 • Synced to cloud
                 </p>
               </div>
             </div>
@@ -172,6 +226,23 @@ export const SettingsPanel = ({ open, onOpenChange }: SettingsPanelProps) => {
               }}
             >
               Reset
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+        <AlertDialogContent className="glass">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign Out</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to sign out? Your data is safely stored and will be available when you sign back in.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout}>
+              Sign Out
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

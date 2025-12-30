@@ -27,6 +27,7 @@ export const ToolDialog = ({ open, onOpenChange, categoryId, tool }: ToolDialogP
   const [description, setDescription] = useState('');
   const [icon, setIcon] = useState('');
   const [tags, setTags] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const isEditing = !!tool;
 
@@ -46,24 +47,29 @@ export const ToolDialog = ({ open, onOpenChange, categoryId, tool }: ToolDialogP
     }
   }, [tool, open]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     
-    const toolData = {
-      name,
-      url,
-      description: description || undefined,
-      icon: icon || undefined,
-      tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : undefined,
-    };
+    try {
+      const toolData = {
+        name,
+        url,
+        description: description || undefined,
+        icon: icon || undefined,
+        tags: tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : undefined,
+      };
 
-    if (isEditing && tool) {
-      updateTool(categoryId, tool.id, toolData);
-    } else {
-      addTool(categoryId, toolData);
+      if (isEditing && tool) {
+        await updateTool(categoryId, tool.id, toolData);
+      } else {
+        await addTool(categoryId, toolData);
+      }
+
+      onOpenChange(false);
+    } finally {
+      setLoading(false);
     }
-
-    onOpenChange(false);
   };
 
   return (
@@ -135,8 +141,8 @@ export const ToolDialog = ({ open, onOpenChange, categoryId, tool }: ToolDialogP
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">
-              {isEditing ? 'Save Changes' : 'Add Tool'}
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Saving...' : isEditing ? 'Save Changes' : 'Add Tool'}
             </Button>
           </DialogFooter>
         </form>

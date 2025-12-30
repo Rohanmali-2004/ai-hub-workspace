@@ -1,21 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { Header } from '@/components/Header';
 import { CategorySection } from '@/components/CategorySection';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { CategoryDialog } from '@/components/CategoryDialog';
 import { MobileNav } from '@/components/MobileNav';
 import { EmptyState } from '@/components/EmptyState';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 
 const Index = () => {
-  const { categories, searchQuery } = useApp();
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const { categories, searchQuery, loading: appLoading, seedDefaultCategories } = useApp();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
+  const [hasSeeded, setHasSeeded] = useState(false);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Seed default categories for new users
+  useEffect(() => {
+    if (user && !appLoading && categories.length === 0 && !hasSeeded) {
+      setHasSeeded(true);
+      seedDefaultCategories();
+    }
+  }, [user, appLoading, categories.length, hasSeeded, seedDefaultCategories]);
 
   const filteredCategories = categories
-    .sort((a, b) => a.order - b.order)
+    .sort((a, b) => a.sort_order - b.sort_order)
     .filter(category => {
       if (!searchQuery) return true;
       const query = searchQuery.toLowerCase();
@@ -28,6 +48,36 @@ const Index = () => {
         )
       );
     });
+
+  // Show loading while checking auth or loading data
+  if (authLoading || (user && appLoading)) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="fixed inset-0 bg-grid-pattern opacity-30 pointer-events-none" />
+        <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-gradient-glow pointer-events-none" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="relative">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow">
+              <Sparkles className="w-8 h-8 text-primary-foreground" />
+            </div>
+            <div className="absolute inset-0 rounded-2xl bg-gradient-primary blur-xl opacity-50" />
+          </div>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Loading your workspace...</span>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-background relative">
