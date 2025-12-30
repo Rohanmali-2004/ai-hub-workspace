@@ -4,6 +4,7 @@ import { ChevronDown, Plus, Edit2, Trash2, GripVertical } from 'lucide-react';
 import { Category as CategoryType, Tool } from '@/types';
 import { useApp } from '@/context/AppContext';
 import { ToolCard } from './ToolCard';
+import { SortableToolCard } from './SortableToolCard';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -23,6 +24,21 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ToolDialog } from './ToolDialog';
 import { CategoryDialog } from './CategoryDialog';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
 
 interface CategorySectionProps {
   category: CategoryType;
@@ -30,7 +46,7 @@ interface CategorySectionProps {
 }
 
 export const CategorySection = ({ category, searchQuery }: CategorySectionProps) => {
-  const { deleteCategory, deleteTool } = useApp();
+  const { deleteCategory, deleteTool, reorderTools } = useApp();
   const [isOpen, setIsOpen] = useState(true);
   const [editingTool, setEditingTool] = useState<Tool | null>(null);
   const [addToolOpen, setAddToolOpen] = useState(false);
@@ -38,15 +54,39 @@ export const CategorySection = ({ category, searchQuery }: CategorySectionProps)
   const [deleteCategoryOpen, setDeleteCategoryOpen] = useState(false);
   const [deleteToolData, setDeleteToolData] = useState<Tool | null>(null);
 
-  const filteredTools = category.tools.filter(tool => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      tool.name.toLowerCase().includes(query) ||
-      tool.description?.toLowerCase().includes(query) ||
-      tool.tags?.some(tag => tag.toLowerCase().includes(query))
-    );
-  });
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const filteredTools = category.tools
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .filter(tool => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        tool.name.toLowerCase().includes(query) ||
+        tool.description?.toLowerCase().includes(query) ||
+        tool.tags?.some(tag => tag.toLowerCase().includes(query))
+      );
+    });
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      const oldIndex = filteredTools.findIndex(t => t.id === active.id);
+      const newIndex = filteredTools.findIndex(t => t.id === over.id);
+      const newOrder = arrayMove(filteredTools, oldIndex, newIndex);
+      await reorderTools(category.id, newOrder.map(t => t.id));
+    }
+  };
 
   if (searchQuery && filteredTools.length === 0) return null;
 
@@ -105,18 +145,29 @@ export const CategorySection = ({ category, searchQuery }: CategorySectionProps)
           <CollapsibleContent>
             <div className="p-4">
               {filteredTools.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  <AnimatePresence mode="popLayout">
-                    {filteredTools.map((tool) => (
-                      <ToolCard
-                        key={tool.id}
-                        tool={tool}
-                        onEdit={() => setEditingTool(tool)}
-                        onDelete={() => setDeleteToolData(tool)}
-                      />
-                    ))}
-                  </AnimatePresence>
-                </div>
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={filteredTools.map(t => t.id)}
+                    strategy={rectSortingStrategy}
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      <AnimatePresence mode="popLayout">
+                        {filteredTools.map((tool) => (
+                          <SortableToolCard
+                            key={tool.id}
+                            tool={tool}
+                            onEdit={() => setEditingTool(tool)}
+                            onDelete={() => setDeleteToolData(tool)}
+                          />
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  </SortableContext>
+                </DndContext>
               ) : (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground mb-4">No tools in this category yet</p>

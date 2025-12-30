@@ -22,6 +22,7 @@ export const CategoryDialog = ({ open, onOpenChange, category }: CategoryDialogP
   const { addCategory, updateCategory } = useApp();
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const isEditing = !!category;
 
@@ -35,16 +36,21 @@ export const CategoryDialog = ({ open, onOpenChange, category }: CategoryDialogP
     }
   }, [category, open]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     
-    if (isEditing && category) {
-      updateCategory(category.id, { name, icon: icon || '📁' });
-    } else {
-      addCategory(name, icon || '📁');
-    }
+    try {
+      if (isEditing && category) {
+        await updateCategory(category.id, { name, icon: icon || '📁' });
+      } else {
+        await addCategory(name, icon || '📁');
+      }
 
-    onOpenChange(false);
+      onOpenChange(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -81,8 +87,8 @@ export const CategoryDialog = ({ open, onOpenChange, category }: CategoryDialogP
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">
-              {isEditing ? 'Save Changes' : 'Add Category'}
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Saving...' : isEditing ? 'Save Changes' : 'Add Category'}
             </Button>
           </DialogFooter>
         </form>
