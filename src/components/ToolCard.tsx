@@ -44,17 +44,25 @@ export const ToolCard = ({ tool, onEdit, onDelete }: ToolCardProps) => {
           {/* Header */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0">
-              {tool.icon ? (
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 border border-primary/20 group-hover:border-primary/40 transition-colors">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 border border-primary/20 group-hover:border-primary/40 transition-colors overflow-hidden">
+                {tool.icon?.startsWith('http') ? (
+                  <img 
+                    src={tool.icon} 
+                    alt={tool.name} 
+                    className="w-7 h-7 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.parentElement!.innerHTML = `<span class="text-primary font-bold text-lg">${tool.name.charAt(0).toUpperCase()}</span>`;
+                    }}
+                  />
+                ) : tool.icon ? (
                   <span className="text-2xl">{tool.icon}</span>
-                </div>
-              ) : (
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 border border-primary/20 group-hover:border-primary/40 transition-colors">
+                ) : (
                   <span className="text-primary font-bold text-lg">
                     {tool.name.charAt(0).toUpperCase()}
                   </span>
-                </div>
-              )}
+                )}
+              </div>
               <div className="min-w-0 flex-1">
                 <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                   {tool.name}
