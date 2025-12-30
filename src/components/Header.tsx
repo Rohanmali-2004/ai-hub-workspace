@@ -1,6 +1,7 @@
 import { Settings, Plus, Sparkles, Command } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SearchBar } from './SearchBar';
+import { AISuggestions } from './AISuggestions';
 import { motion } from 'framer-motion';
 
 interface HeaderProps {
@@ -49,6 +50,9 @@ export const Header = ({ onAddCategory, onOpenSettings, onOpenCommand }: HeaderP
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            <div className="hidden md:block">
+              <AISuggestions />
+            </div>
             <Button
               variant="outline"
               size="sm"
