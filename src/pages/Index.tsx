@@ -9,6 +9,7 @@ import { SettingsPanel } from '@/components/SettingsPanel';
 import { CategoryDialog } from '@/components/CategoryDialog';
 import { MobileNav } from '@/components/MobileNav';
 import { EmptyState } from '@/components/EmptyState';
+import { CommandPalette, useCommandPalette } from '@/components/CommandPalette';
 import { Sparkles, Loader2 } from 'lucide-react';
 
 const Index = () => {
@@ -18,6 +19,7 @@ const Index = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
   const [hasSeeded, setHasSeeded] = useState(false);
+  const { open: commandOpen, setOpen: setCommandOpen } = useCommandPalette();
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -87,7 +89,8 @@ const Index = () => {
       
       <Header 
         onAddCategory={() => setAddCategoryOpen(true)} 
-        onOpenSettings={() => setSettingsOpen(true)} 
+        onOpenSettings={() => setSettingsOpen(true)}
+        onOpenCommand={() => setCommandOpen(true)}
       />
 
       <main className="container mx-auto px-4 py-8 pb-32 md:pb-8">
@@ -106,7 +109,9 @@ const Index = () => {
             Welcome to <span className="text-gradient">INTELYX</span>
           </h1>
           <p className="text-muted-foreground max-w-lg">
-            Your intelligence, unified. Access all your AI tools and productivity platforms from one beautiful dashboard.
+            Your intelligence, unified. Press{' '}
+            <kbd className="px-1.5 py-0.5 rounded border border-border bg-muted text-xs font-mono">⌘K</kbd>{' '}
+            to search and launch tools instantly.
           </p>
         </motion.div>
 
@@ -149,6 +154,14 @@ const Index = () => {
       <MobileNav 
         onAddCategory={() => setAddCategoryOpen(true)} 
         onOpenSettings={() => setSettingsOpen(true)} 
+      />
+
+      {/* Command Palette */}
+      <CommandPalette 
+        open={commandOpen} 
+        onOpenChange={setCommandOpen}
+        onOpenSettings={() => setSettingsOpen(true)}
+        onAddCategory={() => setAddCategoryOpen(true)}
       />
 
       {/* Dialogs */}

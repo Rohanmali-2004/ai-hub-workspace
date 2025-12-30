@@ -1,4 +1,4 @@
-import { Settings, Plus, Sparkles } from 'lucide-react';
+import { Settings, Plus, Sparkles, Command } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SearchBar } from './SearchBar';
 import { motion } from 'framer-motion';
@@ -6,9 +6,10 @@ import { motion } from 'framer-motion';
 interface HeaderProps {
   onAddCategory: () => void;
   onOpenSettings: () => void;
+  onOpenCommand?: () => void;
 }
 
-export const Header = ({ onAddCategory, onOpenSettings }: HeaderProps) => {
+export const Header = ({ onAddCategory, onOpenSettings, onOpenCommand }: HeaderProps) => {
   return (
     <motion.header 
       className="sticky top-0 z-40 glass border-b border-border/50"
@@ -32,9 +33,18 @@ export const Header = ({ onAddCategory, onOpenSettings }: HeaderProps) => {
             </div>
           </div>
 
-          {/* Search */}
+          {/* Search / Command Trigger */}
           <div className="flex-1 max-w-md hidden md:block">
-            <SearchBar />
+            <button
+              onClick={onOpenCommand}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/50 border border-transparent hover:border-primary/30 hover:bg-secondary/70 transition-all text-muted-foreground text-sm group"
+            >
+              <Command className="w-4 h-4" />
+              <span className="flex-1 text-left">Search tools...</span>
+              <kbd className="hidden sm:inline-flex h-5 items-center gap-1 rounded border border-border/50 bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground group-hover:border-primary/30">
+                ⌘K
+              </kbd>
+            </button>
           </div>
 
           {/* Actions */}
@@ -47,6 +57,14 @@ export const Header = ({ onAddCategory, onOpenSettings }: HeaderProps) => {
             >
               <Plus className="w-4 h-4 mr-2" />
               Add Category
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onOpenCommand}
+              className="md:hidden"
+            >
+              <Command className="w-5 h-5" />
             </Button>
             <Button
               variant="ghost"
