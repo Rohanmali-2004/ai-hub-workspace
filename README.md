@@ -22,3 +22,34 @@ AI Hub Workspace is designed as a modular environment for developing intelligent
 - Backend Integration (if applicable)
 
 ## Project Structure
+ai-hub-workspace/
+│── models/ # ML/DL models
+│── datasets/ # Data handling
+│── scripts/ # Utility scripts
+│── notebooks/ # Experimentation
+│── src/ # Core logic
+│── README.md
+
+
+## Use Cases
+
+- AI-based academic projects
+- Research experimentation
+- Prototype development for startups
+- Automation using intelligent systems
+
+## Getting Started
+
+Clone the repository:
+
+```bash
+git clone https://github.com/Rohanmali-2004/ai-hub-workspace.git
+cd ai-hub-workspace
+
+Install dependencies:
+
+pip install -r requirements.txt
+
+Run the project:
+
+python main.py
